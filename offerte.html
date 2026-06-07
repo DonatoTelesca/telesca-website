@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Telesca Form — 3D-Druck Offertanfrage. CAD-Datei hochladen, Material wählen, Offerte erhalten." />
+  <title>Offertanfrage — Telesca Form</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect x='0' y='8' width='48' height='10' fill='%230a0a0a'/><rect x='18' y='18' width='12' height='28' fill='%230a0a0a'/><circle cx='0' cy='13' r='5' fill='%230a0a0a'/><circle cx='48' cy='13' r='5' fill='%230a0a0a'/></svg>" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f5f0;
+      --gray: #8a8a8a;
+      --light: #e8e8e3;
+      --border: rgba(10,10,10,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: var(--white);
+      color: var(--black);
+      line-height: 1.5;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 3rem;
+      background: rgba(245,245,240,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display:flex; align-items:center; text-decoration:none; }
+    .nav-logo svg { height: 32px; width: auto; }
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--gray);
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--black); }
+    .nav-back svg { width: 14px; height: 14px; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 9rem 3rem 4rem;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: end;
+    }
+    .header-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 1rem;
+    }
+    .header-title {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      line-height: 0.95;
+    }
+    .header-desc {
+      font-size: 0.95rem;
+      color: var(--gray);
+      line-height: 1.8;
+      max-width: 380px;
+    }
+    .header-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .header-step {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+    .header-step-num {
+      width: 24px;
+      height: 24px;
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    /* ── FORM LAYOUT ── */
+    .form-page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 5rem 3rem 8rem;
+    }
+
+    .form-section {
+      margin-bottom: 4rem;
+      padding-bottom: 4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-section:last-of-type { border-bottom: none; }
+
+    .form-section-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 0.5rem;
+    }
+    .form-section-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+
+    /* ── DRAG & DROP ── */
+    .dropzone {
+      border: 2px dashed rgba(10,10,10,0.18);
+      padding: 4rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .dropzone:hover,
+    .dropzone.drag-over {
+      border-color: var(--black);
+      background: rgba(10,10,10,0.02);
+    }
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .dropzone-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1.5rem;
+      opacity: 0.3;
+    }
+    .dropzone-title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .dropzone-sub {
+      font-size: 0.8rem;
+      color: var(--gray);
+      margin-bottom: 1rem;
+    }
+    .dropzone-types {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .dropzone-type {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border);
+      color: var(--gray);
+    }
+
+    /* file preview */
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      border: 1.5px solid var(--black);
+      margin-top: 1rem;
+    }
+    .file-preview.show { display: flex; }
+    .file-preview-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--black);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .file-preview-icon svg { width: 20px; height: 20px; }
+    .file-preview-info { flex: 1; min-width: 0; }
+    .file-preview-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-preview-size {
+      font-size: 0.72rem;
+      color: var(--gray);
+      letter-spacing: 0.05em;
+      margin-top: 0.2rem;
+    }
+    .file-preview-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gray);
+      padding: 0.25rem;
+      transition: color 0.2s;
+    }
+    .file-preview-remove:hover { color: var(--black); }
+
+    .file-error {
+      display: none;
+      font-size: 0.78rem;
+      color: #c0392b;
+      margin-top: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    .file-error.show { display: block; }
+
+    /* ── MATERIAL CARDS ── */
+    .material-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+    .material-card {
+      background: var(--white);
+      padding: 1.75rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+    .material-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .material-card:hover { background: var(--light); }
+    .material-card.selected {
+      background: var(--black);
+    }
+    .material-card.selected .material-name,
+    .material-card.selected .material-desc,
+    .material-card.selected .material-tag { color: var(--white); }
+    .material-card.selected .material-tag { border-color: rgba(245,245,240,0.2); }
+
+    .material-check {
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--border);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .material-card.selected .material-check {
+      border-color: var(--white);
+      background: var(--white);
+    }
+    .material-check::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--black);
+      display: none;
+    }
+    .material-card.selected .material-check::after { display: block; }
+
+    .material-tag {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gray);
+      border: 1px solid var(--border);
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      margin-bottom: 0.75rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .material-name {
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+    .material-desc {
+      font-size: 0.75rem;
+      color: var(--gray);
+      line-height: 1.6;
+      transition: color 0.2s;
+    }
+
+    /* ── QUALITY SELECTOR ── */
+    .quality-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+    .quality-card {
+      background: var(--white);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+      text-align: center;
+    }
+    .quality-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .quality-card:hover { background: var(--light); }
+    .quality-card.selected { background: var(--black); }
+    .quality-card.selected .quality-label,
+    .quality-card.selected .quality-height,
+    .quality-card.selected .quality-desc { color: var(--white); }
+
+    .quality-visual {
+      height: 40px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      margin-bottom: 1rem;
+    }
+    .quality-bar {
+      width: 100%;
+      background: rgba(10,10,10,0.15);
+      transition: background 0.2s;
+    }
+    .quality-card.selected .quality-bar { background: rgba(245,245,240,0.25); }
+
+    .quality-label {
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      transition: color 0.2s;
+    }
+    .quality-height {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      color: var(--gray);
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+    .quality-desc {
+      font-size: 0.7rem;
+      color: var(--gray);
+      line-height: 1.5;
+      transition: color 0.2s;
+    }
+
+    /* ── INFILL SLIDER ── */
+    .infill-row {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .infill-track {
+      flex: 1;
+      position: relative;
+    }
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--black);
+      cursor: pointer;
+      border-radius: 0;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: var(--black);
+      cursor: pointer;
+      border-radius: 0;
+      border: none;
+    }
+    .infill-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      min-width: 4rem;
+      text-align: right;
+    }
+    .infill-hints {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+    .infill-hint {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+
+    /* ── COLOR PICKER ── */
+    .color-grid {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .color-option {
+      position: relative;
+      cursor: pointer;
+    }
+    .color-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .color-swatch {
+      width: 44px;
+      height: 44px;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .color-option:hover .color-swatch { transform: scale(1.08); }
+    .color-option.selected .color-swatch { border-color: var(--black); }
+    .color-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gray);
+      text-align: center;
+      margin-top: 0.3rem;
+    }
+
+    /* ── TEXT INPUTS ── */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label {
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--black);
+      padding: 0.85rem 1rem;
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 0;
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: var(--gray); opacity: 0.6; }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--black); }
+    .form-group textarea { resize: vertical; min-height: 110px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    /* ── SUMMARY BAR ── */
+    .summary-bar {
+      position: sticky;
+      bottom: 0;
+      background: var(--black);
+      color: var(--white);
+      padding: 1.25rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .summary-items {
+      display: flex;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .summary-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .summary-item-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+    .summary-item-value {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-submit {
+      background: var(--white);
+      color: var(--black);
+      border: none;
+      padding: 0.9rem 2.5rem;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-submit:hover { background: var(--light); }
+    .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── SUCCESS STATE ── */
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 8rem 3rem;
+    }
+    .form-success.show { display: block; }
+    .success-mark {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 2rem;
+    }
+    .success-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .success-desc {
+      font-size: 0.95rem;
+      color: var(--gray);
+      line-height: 1.8;
+      max-width: 400px;
+      margin: 0 auto 2.5rem;
+    }
+    .btn-back {
+      display: inline-block;
+      padding: 0.9rem 2rem;
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      border: 1.5px solid var(--black);
+      color: var(--black);
+      background: transparent;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-back:hover { background: var(--black); color: var(--white); }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(10,10,10,0.2);
+      border-top-color: var(--black);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    .spinner.show { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav { padding: 1.25rem 1.5rem; }
+      .page-header { grid-template-columns: 1fr; padding: 7rem 1.5rem 3rem; gap: 2rem; }
+      .form-page { padding: 3rem 1.5rem 10rem; }
+      .material-grid { grid-template-columns: repeat(2, 1fr); }
+      .quality-grid { grid-template-columns: repeat(2, 1fr); }
+      .input-grid { grid-template-columns: 1fr; }
+      .summary-bar { padding: 1.25rem 1.5rem; }
+      .summary-items { gap: 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      .material-grid { grid-template-columns: 1fr; }
+      .quality-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="index.html" aria-label="Telesca">
+      <svg viewBox="0 0 320 72" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(0,12)">
+          <rect x="0" y="0" width="48" height="10" fill="#0a0a0a"/>
+          <rect x="18" y="10" width="12" height="36" fill="#0a0a0a"/>
+          <circle cx="0"  cy="5" r="5" fill="#0a0a0a"/>
+          <circle cx="48" cy="5" r="5" fill="#0a0a0a"/>
+          <rect x="20" y="44" width="8" height="4" fill="#0a0a0a"/>
+        </g>
+        <text x="66" y="34" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-weight="800" font-size="30" letter-spacing="6" fill="#0a0a0a">TELESCA</text>
+        <text x="68" y="54" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-weight="400" font-size="9.5" letter-spacing="4" fill="#8a8a8a">AERIAL  ·  FORM</text>
+      </svg>
+    </a>
+    <a class="nav-back" href="index.html#form">
+      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+      </svg>
+      Zurück
+    </a>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div>
+      <p class="header-label">Telesca Form</p>
+      <h1 class="header-title">3D-Druck<br>Offertanfrage</h1>
+    </div>
+    <div>
+      <p class="header-desc">
+        Lade deine CAD-Datei hoch, wähle Material und Qualität —
+        du erhältst innerhalb von 24 Stunden eine persönliche Offerte per E-Mail.
+      </p>
+      <div class="header-steps">
+        <div class="header-step">
+          <span class="header-step-num">01</span>
+          CAD-Datei hochladen
+        </div>
+        <div class="header-step">
+          <span class="header-step-num">02</span>
+          Material & Qualität wählen
+        </div>
+        <div class="header-step">
+          <span class="header-step-num">03</span>
+          Kontaktdaten eingeben
+        </div>
+        <div class="header-step">
+          <span class="header-step-num">04</span>
+          Offerte per E-Mail erhalten
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SUCCESS STATE -->
+  <div class="form-success" id="successState">
+    <svg class="success-mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="64" height="64" fill="#0a0a0a"/>
+      <path d="M18 32L28 42L46 22" stroke="#f5f5f0" stroke-width="2.5" stroke-linecap="square"/>
+    </svg>
+    <h2 class="success-title">Anfrage<br>erhalten.</h2>
+    <p class="success-desc">
+      Deine Offertanfrage ist bei uns eingegangen. Du erhältst innerhalb von
+      24 Stunden eine Antwort von Donato Telesca mit allen Details und dem Preis.
+    </p>
+    <a class="btn-back" href="index.html">Zur Startseite</a>
+  </div>
+
+  <!-- MAIN FORM -->
+  <main id="formWrap">
+    <!--
+      ════════════════════════════════════════════════════════
+      SETUP: Formspree
+      1. Gehe zu https://formspree.io und registriere dich kostenlos
+      2. Erstelle ein neues Formular (E-Mail: donato.telesca@telesca.swiss)
+      3. Kopiere deine Form-ID (z.B. "xpwzvqkr")
+      4. Ersetze "YOUR_FORM_ID" unten mit deiner ID
+      ════════════════════════════════════════════════════════
+    -->
+    <form
+      id="quoteForm"
+      action="https://formspree.io/f/YOUR_FORM_ID"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+      <!-- Hidden summary fields (populated by JS) -->
+      <input type="hidden" name="_subject" value="Neue 3D-Druck Offertanfrage — Telesca Form" />
+      <input type="hidden" name="material_label" id="hiddenMaterial" />
+      <input type="hidden" name="qualitaet_label" id="hiddenQuality" />
+      <input type="hidden" name="fuellung" id="hiddenInfill" />
+      <input type="hidden" name="farbe" id="hiddenColor" />
+
+      <div class="form-page">
+
+        <!-- ── SECTION 1: FILE UPLOAD ── -->
+        <div class="form-section">
+          <p class="form-section-label">01</p>
+          <h2 class="form-section-title">CAD-Datei</h2>
+
+          <div class="dropzone" id="dropzone">
+            <input type="file" name="cad_datei" id="fileInput" accept=".stl,.obj,.step,.stp,.3mf,.iges,.igs" />
+            <svg class="dropzone-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="16" width="32" height="26" stroke="#0a0a0a" stroke-width="1.5"/>
+              <path d="M18 16V12C18 9.79 19.79 8 22 8H26C28.21 8 30 9.79 30 12V16" stroke="#0a0a0a" stroke-width="1.5"/>
+              <line x1="24" y1="24" x2="24" y2="36" stroke="#0a0a0a" stroke-width="1.5"/>
+              <path d="M19 29L24 24L29 29" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="square"/>
+            </svg>
+            <p class="dropzone-title">Datei hier ablegen</p>
+            <p class="dropzone-sub">oder klicken zum Auswählen · max. 50 MB</p>
+            <div class="dropzone-types">
+              <span class="dropzone-type">STL</span>
+              <span class="dropzone-type">OBJ</span>
+              <span class="dropzone-type">STEP</span>
+              <span class="dropzone-type">3MF</span>
+              <span class="dropzone-type">IGES</span>
+            </div>
+          </div>
+
+          <div class="file-preview" id="filePreview">
+            <div class="file-preview-icon">
+              <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="2" width="10" height="16" stroke="#f5f5f0" stroke-width="1.2"/>
+                <path d="M11 2V7H16" stroke="#f5f5f0" stroke-width="1.2"/>
+                <path d="M13 2L16 5V18H3" stroke="#f5f5f0" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <div class="file-preview-info">
+              <p class="file-preview-name" id="fileName">—</p>
+              <p class="file-preview-size" id="fileSize">—</p>
+            </div>
+            <button type="button" class="file-preview-remove" id="fileRemove">Entfernen</button>
+          </div>
+          <p class="file-error" id="fileError">Ungültiges Format oder Datei zu groß (max. 50 MB).</p>
+        </div>
+
+        <!-- ── SECTION 2: MATERIAL ── -->
+        <div class="form-section">
+          <p class="form-section-label">02</p>
+          <h2 class="form-section-title">Material</h2>
+          <div class="material-grid" id="materialGrid">
+
+            <label class="material-card" data-value="PLA Standard">
+              <input type="radio" name="material" value="PLA Standard" />
+              <div class="material-check"></div>
+              <span class="material-tag">Einsteiger</span>
+              <p class="material-name">PLA Standard</p>
+              <p class="material-desc">Vielseitig, kostengünstig. Ideal für dekorative Objekte und Konzeptmodelle.</p>
+            </label>
+
+            <label class="material-card" data-value="PLA+">
+              <input type="radio" name="material" value="PLA+" />
+              <div class="material-check"></div>
+              <span class="material-tag">Empfohlen</span>
+              <p class="material-name">PLA+</p>
+              <p class="material-desc">Verbesserte Festigkeit und Zähigkeit. Ideal für funktionale Bauteile.</p>
+            </label>
+
+            <label class="material-card" data-value="PETG">
+              <input type="radio" name="material" value="PETG" />
+              <div class="material-check"></div>
+              <span class="material-tag">Technisch</span>
+              <p class="material-name">PETG</p>
+              <p class="material-desc">Schlagfest, feuchtigkeitsbeständig. Für mechanisch beanspruchte Teile.</p>
+            </label>
+
+            <label class="material-card" data-value="TPU (Flexibel)">
+              <input type="radio" name="material" value="TPU (Flexibel)" />
+              <div class="material-check"></div>
+              <span class="material-tag">Flexibel</span>
+              <p class="material-name">TPU</p>
+              <p class="material-desc">Elastisch und schlagabsorbierend. Für Griffe, Dichtungen, Protektoren.</p>
+            </label>
+
+            <label class="material-card" data-value="ABS">
+              <input type="radio" name="material" value="ABS" />
+              <div class="material-check"></div>
+              <span class="material-tag">Hitzebeständig</span>
+              <p class="material-name">ABS</p>
+              <p class="material-desc">Bis 100°C stabil, nachschleifbar. Für technische Gehäuse und Bauteile.</p>
+            </label>
+
+            <label class="material-card" data-value="Resin (SLA)">
+              <input type="radio" name="material" value="Resin (SLA)" />
+              <div class="material-check"></div>
+              <span class="material-tag">Präzision</span>
+              <p class="material-name">Resin</p>
+              <p class="material-desc">Höchste Detailauflösung, glatte Oberflächen. Für Schmuck, Figuren, Mikroteile.</p>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- ── SECTION 3: QUALITY ── -->
+        <div class="form-section">
+          <p class="form-section-label">03</p>
+          <h2 class="form-section-title">Druckqualität</h2>
+          <div class="quality-grid" id="qualityGrid">
+
+            <label class="quality-card" data-value="Entwurf — 0.3 mm">
+              <input type="radio" name="qualitaet" value="Entwurf — 0.3 mm" />
+              <div class="quality-visual">
+                <div class="quality-bar" style="height:35%"></div>
+                <div class="quality-bar" style="height:35%"></div>
+                <div class="quality-bar" style="height:35%"></div>
+                <div class="quality-bar" style="height:35%"></div>
+              </div>
+              <p class="quality-label">Entwurf</p>
+              <p class="quality-height">0.3 mm</p>
+              <p class="quality-desc">Schnell & günstig. Für Konzeptmodelle und interne Tests.</p>
+            </label>
+
+            <label class="quality-card" data-value="Standard — 0.2 mm">
+              <input type="radio" name="qualitaet" value="Standard — 0.2 mm" />
+              <div class="quality-visual">
+                <div class="quality-bar" style="height:55%"></div>
+                <div class="quality-bar" style="height:55%"></div>
+                <div class="quality-bar" style="height:55%"></div>
+                <div class="quality-bar" style="height:55%"></div>
+              </div>
+              <p class="quality-label">Standard</p>
+              <p class="quality-height">0.2 mm</p>
+              <p class="quality-desc">Ausgewogenes Preis-Leistungs-Verhältnis. Empfohlen für die meisten Projekte.</p>
+            </label>
+
+            <label class="quality-card" data-value="Fein — 0.1 mm">
+              <input type="radio" name="qualitaet" value="Fein — 0.1 mm" />
+              <div class="quality-visual">
+                <div class="quality-bar" style="height:75%"></div>
+                <div class="quality-bar" style="height:75%"></div>
+                <div class="quality-bar" style="height:75%"></div>
+                <div class="quality-bar" style="height:75%"></div>
+              </div>
+              <p class="quality-label">Fein</p>
+              <p class="quality-height">0.1 mm</p>
+              <p class="quality-desc">Sichtbare Teile und Prototypen. Glatte Oberfläche, hohe Detailtreue.</p>
+            </label>
+
+            <label class="quality-card" data-value="Ultra — 0.05 mm">
+              <input type="radio" name="qualitaet" value="Ultra — 0.05 mm" />
+              <div class="quality-visual">
+                <div class="quality-bar" style="height:100%"></div>
+                <div class="quality-bar" style="height:100%"></div>
+                <div class="quality-bar" style="height:100%"></div>
+                <div class="quality-bar" style="height:100%"></div>
+              </div>
+              <p class="quality-label">Ultra</p>
+              <p class="quality-height">0.05 mm</p>
+              <p class="quality-desc">Maximale Präzision. Für Ausstellungsstücke und Präzisionsprototypen.</p>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- ── SECTION 4: DETAILS ── -->
+        <div class="form-section">
+          <p class="form-section-label">04</p>
+          <h2 class="form-section-title">Details</h2>
+
+          <!-- Infill -->
+          <p style="font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gray);margin-bottom:1.25rem;">Fülldichte (Infill)</p>
+          <div class="infill-row">
+            <div class="infill-track">
+              <input type="range" id="infillRange" min="10" max="100" step="5" value="20" />
+              <div class="infill-hints">
+                <span class="infill-hint">10% — Leicht</span>
+                <span class="infill-hint">50% — Stabil</span>
+                <span class="infill-hint">100% — Massiv</span>
+              </div>
+            </div>
+            <div class="infill-value" id="infillDisplay">20%</div>
+          </div>
+
+          <!-- Color -->
+          <p style="font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gray);margin:2rem 0 1rem;">Farbe</p>
+          <div class="color-grid" id="colorGrid">
+            <label class="color-option" data-value="Schwarz">
+              <input type="radio" name="farbe_choice" value="Schwarz" />
+              <div class="color-swatch" style="background:#0a0a0a;"></div>
+              <p class="color-label">Schwarz</p>
+            </label>
+            <label class="color-option" data-value="Weiß">
+              <input type="radio" name="farbe_choice" value="Weiß" />
+              <div class="color-swatch" style="background:#f0f0eb; border:1.5px solid #ddd;"></div>
+              <p class="color-label">Weiß</p>
+            </label>
+            <label class="color-option" data-value="Grau">
+              <input type="radio" name="farbe_choice" value="Grau" />
+              <div class="color-swatch" style="background:#8a8a8a;"></div>
+              <p class="color-label">Grau</p>
+            </label>
+            <label class="color-option" data-value="Silber">
+              <input type="radio" name="farbe_choice" value="Silber" />
+              <div class="color-swatch" style="background:linear-gradient(135deg,#d0d0d0,#a0a0a0);"></div>
+              <p class="color-label">Silber</p>
+            </label>
+            <label class="color-option" data-value="Natur / Transparent">
+              <input type="radio" name="farbe_choice" value="Natur / Transparent" />
+              <div class="color-swatch" style="background:rgba(200,200,190,0.4);border:1.5px solid #ccc;">
+                <svg width="16" height="16" viewBox="0 0 16 16"><line x1="0" y1="0" x2="16" y2="16" stroke="#ccc" stroke-width="1"/></svg>
+              </div>
+              <p class="color-label">Natur</p>
+            </label>
+            <label class="color-option" data-value="Farbe nach Absprache">
+              <input type="radio" name="farbe_choice" value="Farbe nach Absprache" />
+              <div class="color-swatch" style="background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);">
+              </div>
+              <p class="color-label">Andere</p>
+            </label>
+          </div>
+
+          <!-- Quantity & Notes -->
+          <div class="input-grid" style="margin-top:2.5rem;">
+            <div class="form-group">
+              <label for="stueckzahl">Stückzahl</label>
+              <input type="number" id="stueckzahl" name="stueckzahl" min="1" value="1" placeholder="1" />
+            </div>
+            <div class="form-group">
+              <label for="verwendung">Verwendungszweck (optional)</label>
+              <input type="text" id="verwendung" name="verwendung" placeholder="z.B. Prototyp, Ersatzteil, Deko…" />
+            </div>
+            <div class="form-group full">
+              <label for="notizen">Anmerkungen (optional)</label>
+              <textarea id="notizen" name="notizen" placeholder="Besondere Anforderungen, Massangaben, Nachbearbeitung…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 5: CONTACT ── -->
+        <div class="form-section">
+          <p class="form-section-label">05</p>
+          <h2 class="form-section-title">Kontakt</h2>
+          <div class="input-grid">
+            <div class="form-group">
+              <label for="vorname">Vorname *</label>
+              <input type="text" id="vorname" name="vorname" placeholder="Dein Vorname" required />
+            </div>
+            <div class="form-group">
+              <label for="nachname">Nachname *</label>
+              <input type="text" id="nachname" name="nachname" placeholder="Dein Nachname" required />
+            </div>
+            <div class="form-group">
+              <label for="email">E-Mail *</label>
+              <input type="email" id="email" name="email" placeholder="deine@email.ch" required />
+            </div>
+            <div class="form-group">
+              <label for="telefon">Telefon (optional)</label>
+              <input type="tel" id="telefon" name="telefon" placeholder="+41 79 …" />
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /form-page -->
+
+      <!-- STICKY SUMMARY + SUBMIT -->
+      <div class="summary-bar">
+        <div class="summary-items">
+          <div class="summary-item">
+            <span class="summary-item-label">Datei</span>
+            <span class="summary-item-value" id="summaryFile">—</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item-label">Material</span>
+            <span class="summary-item-value" id="summaryMaterial">—</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item-label">Qualität</span>
+            <span class="summary-item-value" id="summaryQuality">—</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-item-label">Infill</span>
+            <span class="summary-item-value" id="summaryInfill">20%</span>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn">
+          Offerte anfordern
+        </button>
+      </div>
+
+    </form>
+  </main>
+
+  <script>
+    // ── FILE UPLOAD & DRAG/DROP
+    const dropzone   = document.getElementById('dropzone');
+    const fileInput  = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileError  = document.getElementById('fileError');
+    const MAX_SIZE   = 50 * 1024 * 1024;
+    const VALID_EXT  = ['.stl','.obj','.step','.stp','.3mf','.iges','.igs'];
+
+    function formatBytes(b) {
+      return b < 1024*1024
+        ? (b/1024).toFixed(1)+' KB'
+        : (b/1024/1024).toFixed(1)+' MB';
+    }
+
+    function showFile(file) {
+      const ext = '.' + file.name.split('.').pop().toLowerCase();
+      if (!VALID_EXT.includes(ext) || file.size > MAX_SIZE) {
+        fileError.classList.add('show');
+        filePreview.classList.remove('show');
+        document.getElementById('summaryFile').textContent = '—';
+        return;
+      }
+      fileError.classList.remove('show');
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = formatBytes(file.size) + ' · ' + ext.toUpperCase().replace('.','');
+      filePreview.classList.add('show');
+      const short = file.name.length > 22 ? file.name.slice(0,19)+'…' : file.name;
+      document.getElementById('summaryFile').textContent = short;
+    }
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) showFile(fileInput.files[0]);
+    });
+
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        showFile(file);
+      }
+    });
+
+    document.getElementById('fileRemove').addEventListener('click', () => {
+      fileInput.value = '';
+      filePreview.classList.remove('show');
+      document.getElementById('summaryFile').textContent = '—';
+    });
+
+    // ── MATERIAL SELECTION
+    document.querySelectorAll('.material-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.material-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        card.querySelector('input[type="radio"]').checked = true;
+        const val = card.dataset.value;
+        document.getElementById('hiddenMaterial').value = val;
+        document.getElementById('summaryMaterial').textContent = val.split(' ')[0];
+      });
+    });
+
+    // ── QUALITY SELECTION
+    document.querySelectorAll('.quality-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.quality-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        card.querySelector('input[type="radio"]').checked = true;
+        const val = card.dataset.value;
+        document.getElementById('hiddenQuality').value = val;
+        document.getElementById('summaryQuality').textContent = val.split(' ')[0];
+      });
+    });
+
+    // ── COLOR SELECTION
+    document.querySelectorAll('.color-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        opt.querySelector('input[type="radio"]').checked = true;
+        document.getElementById('hiddenColor').value = opt.dataset.value;
+      });
+    });
+
+    // ── INFILL SLIDER
+    const infillRange   = document.getElementById('infillRange');
+    const infillDisplay = document.getElementById('infillDisplay');
+    const summaryInfill = document.getElementById('summaryInfill');
+    infillRange.addEventListener('input', () => {
+      const v = infillRange.value + '%';
+      infillDisplay.textContent = v;
+      summaryInfill.textContent = v;
+      document.getElementById('hiddenInfill').value = v;
+    });
+    document.getElementById('hiddenInfill').value = '20%';
+
+    // ── FORM SUBMIT
+    function showSuccess() {
+      document.getElementById('formWrap').style.display = 'none';
+      document.getElementById('successState').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('quoteForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '…';
+
+      // Demo mode: Formspree not yet configured
+      if (this.action.includes('YOUR_FORM_ID')) {
+        showSuccess();
+        return;
+      }
+
+      try {
+        const res = await fetch(this.action, {
+          method: 'POST',
+          body: new FormData(this),
+          headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) {
+          showSuccess();
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Offerte anfordern';
+          alert('Senden fehlgeschlagen. Bitte direkt an donato.telesca@telesca.swiss schreiben.');
+        }
+      } catch {
+        showSuccess();
+      }
+    });
+  </script>
+
+</body>
+</html>

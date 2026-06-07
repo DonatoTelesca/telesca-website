@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" role="img" aria-label="Telesca Logo">
+
+  <!-- MARK: geometric T — crossbar hints at drone arms, stem hints at 3D layers -->
+  <g transform="translate(0, 12)">
+    <!-- Crossbar -->
+    <rect x="0" y="0" width="48" height="10" fill="#0a0a0a"/>
+    <!-- Stem -->
+    <rect x="18" y="10" width="12" height="36" fill="#0a0a0a"/>
+    <!-- Accent dots at crossbar ends — motor / precision nodes -->
+    <circle cx="0"  cy="5" r="5" fill="#0a0a0a"/>
+    <circle cx="48" cy="5" r="5" fill="#0a0a0a"/>
+    <!-- Accent square at stem base — 3D layer / ground reference -->
+    <rect x="20" y="44" width="8" height="4" fill="#0a0a0a"/>
+  </g>
+
+  <!-- WORDMARK -->
+  <text
+    x="66" y="34"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="800"
+    font-size="30"
+    letter-spacing="6"
+    fill="#0a0a0a"
+  >TELESCA</text>
+
+  <!-- TAGLINE -->
+  <text
+    x="68" y="54"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="400"
+    font-size="9.5"
+    letter-spacing="4"
+    fill="#8a8a8a"
+  >AERIAL  ·  FORM</text>
+
+</svg>
